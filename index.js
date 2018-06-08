@@ -1,6 +1,7 @@
 const Joi = require('joi');
 const express = require('express');
 const app = express();
+
 app.use(express.json());
 
 const genres = [
@@ -10,7 +11,6 @@ const genres = [
    { id: 4, name: 'film noir' },
    { id: 5, name: 'marvel universe' }
 ]
-
 
 app.get('/', (req,res) => {
     res.send('Hello world')
@@ -33,6 +33,27 @@ app.post('/api/genres', (req,res) => {
     res.send(genre);
 })
 
+app.put('/api/genres/:id', (req,res) => {
+    const genre = genres.find(g => g.id === parseInt(req.params.id));
+    if (!genre) return res.status(404).send('The genre with the given id could not be found');
+
+    const { error } = validateGenre(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+    
+    genre.name = req.body.name;
+    res.send(genre);
+})
+
+app.delete('/api/genres/:id', (req,res) => {
+    const genre = genres.find(g => g.id === parseInt(req.params.id));
+    if (!genre) return res.status(404).send('The genre with the given id could not be found');
+
+    const index = genres.indexOf(genre);
+    genres.splice(index, 1);
+
+    res.send(genre);
+})
+
 app.get('/api/genres/:id', (req,res) => {
     const genre = genres.find(g => g.id === parseInt(req.params.id));
     if(!genre) return res.status(404).send('The genre with the given id could not be found');
@@ -44,7 +65,6 @@ function validateGenre(genre) {
     const schema = {
         name: Joi.string().min(2).required()
     };
-    console.log(`genre: ${genre}`);
 
     return Joi.validate(genre, schema);
 };
